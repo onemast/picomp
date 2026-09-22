@@ -7,7 +7,7 @@
 <title>Picomp</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
-<link rel="stylesheet" href="app.css?v=50">
+<link rel="stylesheet" href="app.css?v=51">
 </head>
 <body>
 <main>
@@ -29,6 +29,10 @@
           <span class="tip" role="tooltip">Best quality per byte, but only Safari can display it so far. Good for archiving, not for the web. <a href="https://en.wikipedia.org/wiki/JPEG_XL" target="_blank" rel="noopener">Learn more</a></span></label>
       </div>
     </div>
+    <div class="ctl">
+      <label class="toggle"><input type="checkbox" id="metaOn"><span class="switch" aria-hidden="true"></span><span>Keep metadata (EXIF)</span></label>
+      <span class="hint">Camera, lens and date. Also the GPS location, if the photo has one.</span>
+    </div>
     <div class="ctl width" id="width">
       <label class="toggle"><input type="checkbox" id="resizeOn"><span class="switch" aria-hidden="true"></span><span>Resize</span></label>
       <label for="maxw">Max width</label>
@@ -40,10 +44,6 @@
         <input type="number" id="maxwNum" min="100" max="2000" step="1" value="1000" aria-label="Max width in pixels">
         <span>px</span>
       </div>
-    </div>
-    <div class="ctl">
-      <label class="toggle"><input type="checkbox" id="metaOn"><span class="switch" aria-hidden="true"></span><span>Keep metadata (EXIF)</span></label>
-      <span class="hint">Camera, lens and date. Also the GPS location, if the photo has one.</span>
     </div>
   </div>
 
@@ -69,6 +69,6 @@
 
 <script src="vendor/pica.min.js"></script>
 <script src="vendor/codecs.js"></script>
-<script src="app.js?v=50"></script>
+<script src="app.js?v=51"></script>
 </body>
 </html>
