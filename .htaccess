@@ -1,5 +1,0 @@
-# Picomp: keep this folder out of search engines (header covers every file, not just the page)
-<IfModule mod_headers.c>
-  Header set X-Robots-Tag "noindex, nofollow, noarchive"
-</IfModule>
-AddType application/wasm .wasm
