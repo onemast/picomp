@@ -21,9 +21,6 @@ It must be served over HTTP rather than opened from disk, because the encoders a
 Each encoder downloads only when a visitor first picks that format, so a plain JPG conversion never
 fetches the 3.5 MB AVIF encoder.
 
-Deployed on Cloudflare Pages, which serves WebAssembly with the right content type without any
-configuration. The tool is public and indexable.
-
 ## How settings are chosen
 
 Rather than one quality for everything, each format adapts:
