@@ -21,8 +21,8 @@ It must be served over HTTP rather than opened from disk, because the encoders a
 Each encoder downloads only when a visitor first picks that format, so a plain JPG conversion never
 fetches the 3.5 MB AVIF encoder.
 
-`.htaccess` keeps the folder out of search engines and sets the WebAssembly content type. On servers
-that ignore `.htaccess`, the `noindex` tag in the page still applies.
+Deployed on Cloudflare Pages, which serves WebAssembly with the right content type without any
+configuration. A `noindex` tag in the page keeps it out of search engines; remove it to be indexed.
 
 ## How settings are chosen
 
