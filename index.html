@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Picomp</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="stylesheet" href="app.css?v=50">
+</head>
+<body>
+<main>
+  <h1><a href="./" title="Start over">Picomp</a></h1>
+
+  <div class="controls">
+    <div class="ctl formats" id="formats">
+      <label class="toggle"><input type="checkbox" id="convertOn"><span class="switch" aria-hidden="true"></span><span>Convert format</span></label>
+      <div class="seg">
+        <label><input type="radio" name="format" value="jpg" checked><span>JPG</span>
+          <span class="tip" role="tooltip">Photos. Smallest for anything camera-like, no transparency. Works everywhere. <a href="https://en.wikipedia.org/wiki/JPEG" target="_blank" rel="noopener">Learn more</a></span></label>
+        <label><input type="radio" name="format" value="png"><span>PNG</span>
+          <span class="tip" role="tooltip">Logos, screenshots, graphics with flat colour or transparency. Photos get big. <a href="https://en.wikipedia.org/wiki/PNG" target="_blank" rel="noopener">Learn more</a></span></label>
+        <label><input type="radio" name="format" value="webp"><span>WebP</span>
+          <span class="tip" role="tooltip">Photos and graphics, with transparency. 25% smaller than JPG. Works in every browser. <a href="https://en.wikipedia.org/wiki/WebP" target="_blank" rel="noopener">Learn more</a></span></label>
+        <label><input type="radio" name="format" value="avif"><span>AVIF</span>
+          <span class="tip" role="tooltip">Newer than WebP, 20 to 30% smaller again, slower to make. Works in every current browser. <a href="https://en.wikipedia.org/wiki/AVIF" target="_blank" rel="noopener">Learn more</a></span></label>
+        <label><input type="radio" name="format" value="jxl"><span>JXL</span>
+          <span class="tip" role="tooltip">Best quality per byte, but only Safari can display it so far. Good for archiving, not for the web. <a href="https://en.wikipedia.org/wiki/JPEG_XL" target="_blank" rel="noopener">Learn more</a></span></label>
+      </div>
+    </div>
+    <div class="ctl width" id="width">
+      <label class="toggle"><input type="checkbox" id="resizeOn"><span class="switch" aria-hidden="true"></span><span>Resize</span></label>
+      <label for="maxw">Max width</label>
+      <div class="slider">
+        <div class="rule" aria-hidden="true"><div class="scale" id="scale"><b id="marker"></b></div></div>
+        <input type="range" id="maxw" min="100" max="2000" step="100" value="1000">
+      </div>
+      <div class="exact">
+        <input type="number" id="maxwNum" min="100" max="2000" step="1" value="1000" aria-label="Max width in pixels">
+        <span>px</span>
+      </div>
+    </div>
+    <div class="ctl">
+      <label class="toggle"><input type="checkbox" id="metaOn"><span class="switch" aria-hidden="true"></span><span>Keep metadata (EXIF)</span></label>
+      <span class="hint">Camera, lens and date. Also the GPS location, if the photo has one.</span>
+    </div>
+  </div>
+
+  <div class="table" id="table">
+    <button type="button" class="drop" id="drop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15.5l-4.8-4.8a1.5 1.5 0 0 0-2.1 0L6 19"/></svg>
+      <strong>Drop images here</strong>
+      <span>or click to choose files</span>
+    </button>
+  </div>
+  <input type="file" id="pick" accept="image/*,.heic,.heif,.hif,.avif,.jxl" multiple hidden>
+
+  <ul class="results" id="results" aria-live="polite"></ul>
+
+  <dl class="formats-help">
+    <div><dt><a href="https://en.wikipedia.org/wiki/JPEG" target="_blank" rel="noopener">JPG</a></dt><dd>Photos. Smallest for anything camera-like, no transparency. Works everywhere.</dd></div>
+    <div><dt><a href="https://en.wikipedia.org/wiki/PNG" target="_blank" rel="noopener">PNG</a></dt><dd>Logos, screenshots, graphics with flat colour or transparency. Photos get big.</dd></div>
+    <div><dt><a href="https://en.wikipedia.org/wiki/WebP" target="_blank" rel="noopener">WebP</a></dt><dd>Photos and graphics, with transparency. 25% smaller than JPG. Works in every browser.</dd></div>
+    <div><dt><a href="https://en.wikipedia.org/wiki/AVIF" target="_blank" rel="noopener">AVIF</a></dt><dd>Newer than WebP, 20 to 30% smaller again, slower to make. Works in every current browser.</dd></div>
+    <div><dt><a href="https://en.wikipedia.org/wiki/JPEG_XL" target="_blank" rel="noopener">JXL</a></dt><dd>Best quality per byte, but only Safari can display it so far. Good for archiving, not for the web.</dd></div>
+  </dl>
+</main>
+
+<script src="vendor/pica.min.js"></script>
+<script src="vendor/codecs.js"></script>
+<script src="app.js?v=50"></script>
+</body>
+</html>

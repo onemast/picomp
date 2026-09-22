@@ -1,0 +1,6 @@
+# Comparison images used for tuning: large, and regenerated on demand.
+# The leading hash is escaped, otherwise git reads the line as a comment.
+\#tests/
+
+# Temp files left behind by an interrupted write
+*.tmp

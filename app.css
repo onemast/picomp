@@ -1,0 +1,348 @@
+/* Picomp styles: light-table look, format and width controls, drop area, result rows with thumbnail and size bars */
+:root {
+  --surface: #EDF1F4;
+  --surface-2: #E1E7EC;
+  --panel: #FFFFFF;
+  --ink: #15202B;
+  --muted: #5D6B78;
+  --rule: #CBD4DB;
+  --accent: #0E6383;
+  --accent-ink: #FFFFFF;
+  --accent-tint: #E4F1F6;
+  --good: #23824C;
+  --bar: #B9C4CD;
+  --bad: #A8322B;
+  --shadow: 0 1px 2px rgba(21,32,43,.06), 0 8px 24px -12px rgba(21,32,43,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #10171E;
+    --surface-2: #0B1116;
+    --panel: #1A232D;
+    --ink: #E9EFF4;
+    --muted: #93A2B0;
+    --rule: #2E3B48;
+    --accent: #5FBFE0;
+    --accent-ink: #08212C;
+    --accent-tint: #14303C;
+    --good: #5FCB8C;
+    --bar: #465564;
+    --bad: #F08A82;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { background: var(--surface-2); }
+body {
+  min-height: 100vh;
+  background: linear-gradient(var(--surface), var(--surface-2)) fixed;
+  color: var(--ink);
+  font-family: "Avenir Next", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 64px 24px 96px;
+}
+main { max-width: 720px; margin: 0 auto; }
+h1 a { color: inherit; text-decoration: none; }
+h1 a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
+h1 {
+  font-size: 44px;
+  line-height: 1.05;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  margin: 0 0 32px;
+}
+
+/* Controls: two rows, each led by a switch that enables the controls after it */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 0 20px;
+}
+.ctl { display: flex; align-items: center; gap: 14px; }
+.formats { flex-wrap: wrap; }
+.width label[for="maxw"] { padding: 0; font-size: 14px; color: var(--muted); }
+.hint { font-size: 13px; color: var(--muted); }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 3px; transition: opacity .18s ease; }
+/* Dim only the pill text, never the whole row: opacity on an ancestor would fade the tooltips too,
+   and they stay readable so you can compare formats before switching converting on */
+.formats.off .seg > label > span:not(.tip) { opacity: .35; cursor: default; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span:not(.tip) {
+  display: block;
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.seg input:checked + span { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(21,32,43,.18); }
+.seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 1px; }
+/* Formats not built yet: greyed pill with a small tag, never selectable */
+.seg .soon span { opacity: .45; cursor: not-allowed; }
+.seg .soon small { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-left: 4px; color: var(--accent); }
+
+/* Format tooltip: sits under its pill on hover or keyboard focus, and stays open while the pointer
+   is inside it so the link can be clicked. Touch devices get the list below the drop zone instead. */
+.seg label { position: relative; }
+.tip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  z-index: 5;
+  width: 248px;
+  padding: 10px 12px;
+  background: var(--panel);
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .14s ease, transform .14s ease, visibility .14s;
+}
+.tip::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -10px; height: 10px;
+}
+.tip a { color: var(--accent); white-space: nowrap; }
+.seg label:hover .tip,
+.seg label:focus-within .tip,
+.tip:hover { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+/* Keep the last pills' tooltips on screen */
+.seg label:nth-last-child(1) .tip { left: auto; right: 0; transform: translateX(0) translateY(-4px); }
+.seg label:nth-last-child(2) .tip { left: auto; right: 0; transform: translateX(0) translateY(-4px); }
+.seg label:nth-last-child(1):hover .tip, .seg label:nth-last-child(1):focus-within .tip,
+.seg label:nth-last-child(2):hover .tip, .seg label:nth-last-child(2):focus-within .tip { transform: translateX(0) translateY(0); }
+
+/* Format explainer, kept for touch screens where there is no hover. It sits after the results
+   so conversions appear first, and the extra top margin only applies once there are results. */
+.formats-help { display: none; margin: 18px 0 0; padding: 0 6px; gap: 5px; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.results:not(:empty) + .formats-help { margin-top: 28px; }
+@media (hover: none) {
+  .formats-help { display: grid; }
+  .tip { display: none; }
+}
+.formats-help div { display: grid; grid-template-columns: 52px 1fr; gap: 10px; }
+.formats-help dt { font-weight: 600; color: var(--ink); }
+.formats-help dt a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--rule); }
+.formats-help dt a:hover { border-bottom-color: var(--accent); color: var(--accent); }
+.formats-help dd { margin: 0; }
+/* Width control: switch, label, ruler slider and exact px box on one row */
+.width > * { white-space: nowrap; }
+
+/* Switch: the checkbox is hidden, the pill after it draws the track and knob */
+.toggle { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer; user-select: none; }
+.toggle input { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; }
+.switch {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--bar);
+  transition: background .18s ease;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(21,32,43,.3);
+  transition: transform .18s ease;
+}
+.toggle input:checked + .switch { background: var(--accent); }
+.toggle input:checked + .switch::after { transform: translateX(16px); }
+.toggle input:focus-visible + .switch { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* Resize off: slider, ticks and box fade out and stop reacting */
+.width.off .slider, .width.off .exact, .width.off label[for="maxw"] { opacity: .35; pointer-events: none; }
+.width .slider, .width .exact, .width label[for="maxw"] { transition: opacity .18s ease; }
+/* Ruler slider: a panel with tick marks and labels sits behind a native range input whose track is invisible */
+.slider { position: relative; flex: 1; min-width: 0; height: 44px; }
+.rule {
+  position: absolute;
+  inset: 0;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.scale { position: absolute; top: 0; bottom: 0; left: 8px; right: 8px; }
+.scale i { position: absolute; bottom: 0; width: 1px; height: 6px; background: var(--bar); transform: translateX(-50%); }
+.scale i.major { height: 11px; background: var(--muted); }
+.scale span { position: absolute; top: 5px; transform: translateX(-50%); }
+.scale span:last-of-type { transform: translateX(-80%); }
+.scale b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); transform: translateX(-50%); }
+.slider input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.slider input[type="range"]::-webkit-slider-runnable-track { height: 44px; background: transparent; }
+.slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  margin-top: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.slider input[type="range"]::-moz-range-track { height: 44px; background: transparent; }
+.slider input[type="range"]::-moz-range-thumb {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.slider input[type="range"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+.exact { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); }
+.exact input {
+  width: 68px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  text-align: right;
+}
+.exact input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+/* Thin out ruler labels as the slider gets narrower: every 400 under 900px, every 1000 under 600px */
+@media (max-width: 900px) {
+  .scale span:nth-of-type(odd) { display: none; }
+}
+@media (max-width: 600px) {
+  .scale span:not(:nth-of-type(5n)) { display: none; }
+  .width { flex-wrap: wrap; }
+  .width .slider { flex: 1 1 100%; order: 3; }
+  .width .exact { margin-left: auto; }
+}
+
+.table { border-radius: 14px; box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease; }
+.drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 56px 24px 60px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+/* Dashed outline inside the panel, the familiar "drop here" cue */
+.drop::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 2px dashed var(--rule);
+  border-radius: 10px;
+  pointer-events: none;
+  transition: border-color .18s ease;
+}
+.table.over .drop::after { border-color: var(--accent); }
+.drop svg { width: 44px; height: 44px; color: var(--accent); margin-bottom: 10px; transition: transform .18s ease; }
+.drop strong { font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+.drop span { color: var(--muted); }
+.drop:hover { background: var(--accent-tint); }
+.drop:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.table.over { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(21,32,43,.08), 0 22px 40px -16px rgba(14,99,131,.45); }
+.table.over .drop { border-color: var(--accent); }
+.table.over .drop { background: var(--accent-tint); }
+.table.over .drop svg { transform: translateY(-4px); }
+
+.results { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 10px; }
+.row {
+  display: grid;
+  grid-template-columns: 88px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 10px 16px 10px 10px;
+  font-variant-numeric: tabular-nums;
+}
+.thumb {
+  width: 88px; height: 66px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  position: relative;
+}
+.thumb::after { content: ""; position: absolute; inset: 0; border-radius: 7px; box-shadow: inset 0 0 0 1px rgba(21,32,43,.12); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.info { min-width: 0; }
+.name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bars { display: grid; gap: 4px; margin: 6px 0 4px; }
+.bar { display: grid; grid-template-columns: 1fr 64px; gap: 10px; align-items: center; font-size: 12px; color: var(--muted); }
+.bar i { display: block; height: 6px; border-radius: 3px; background: var(--bar); min-width: 4px; transition: width .5s cubic-bezier(.2,.7,.2,1); }
+.bar.new i { background: var(--good); }
+.bar.new span { color: var(--ink); font-weight: 600; }
+.bar span { text-align: right; white-space: nowrap; }
+.meta { font-size: 13px; color: var(--muted); }
+.meta b { color: var(--good); font-weight: 600; }
+.dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.dl svg { width: 15px; height: 15px; }
+.dl:hover { filter: brightness(1.08); }
+.dl:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.row.busy .thumb, .row.busy .bar i {
+  background: linear-gradient(100deg, var(--surface-2) 30%, var(--panel) 50%, var(--surface-2) 70%) 0 0 / 300% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+.row.failed .thumb { display: grid; place-items: center; color: var(--bad); font-weight: 700; font-size: 22px; }
+.err { color: var(--bad); font-size: 14px; }
+@keyframes shimmer { to { background-position: -300% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .table, .drop, .drop svg, .bar i { transition: none; }
+  .row.busy .thumb, .row.busy .bar i { animation: none; }
+}
+@media (max-width: 560px) {
+  body { padding: 40px 16px 72px; }
+  h1 { font-size: 34px; }
+  .row { grid-template-columns: 64px 1fr; padding-right: 10px; }
+  .thumb { width: 64px; height: 48px; }
+  .dl { grid-column: 1 / -1; justify-content: center; }
+}
