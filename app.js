@@ -317,6 +317,68 @@ function crc32(bytes) {
   return (c ^ 0xFFFFFFFF) >>> 0;
 }
 
+// Minimal ZIP writer. Entries are stored rather than deflated, because every file going in is
+// already a compressed image and deflating it again would cost time for roughly nothing
+function zipStore(entries) {
+  const enc = new TextEncoder();
+  const now = new Date();
+  const time = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+  const date = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+  const parts = [], central = [];
+  let offset = 0;
+
+  for (const e of entries) {
+    const name = enc.encode(e.name);
+    const data = e.bytes;
+    const crc = crc32(data);
+
+    const local = new Uint8Array(30 + name.length);
+    const lv = new DataView(local.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);
+    lv.setUint16(6, 0x0800, true);
+    lv.setUint16(8, 0, true);
+    lv.setUint16(10, time, true);
+    lv.setUint16(12, date, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, data.length, true);
+    lv.setUint32(22, data.length, true);
+    lv.setUint16(26, name.length, true);
+    local.set(name, 30);
+    parts.push(local, data);
+
+    const cd = new Uint8Array(46 + name.length);
+    const cv = new DataView(cd.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint16(10, 0, true);
+    cv.setUint16(12, time, true);
+    cv.setUint16(14, date, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, data.length, true);
+    cv.setUint32(24, data.length, true);
+    cv.setUint16(28, name.length, true);
+    cv.setUint32(42, offset, true);
+    cd.set(name, 46);
+    central.push(cd);
+
+    offset += local.length + data.length;
+  }
+
+  const cdSize = central.reduce((n, c) => n + c.length, 0);
+  const end = new Uint8Array(22);
+  const ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, entries.length, true);
+  ev.setUint16(10, entries.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, offset, true);
+
+  return new Blob([...parts, ...central, end], { type: 'application/zip' });
+}
+
 function pngWithExif(out, tiff) {
   const o = new Uint8Array(out);
   const dv = new DataView(o.buffer, o.byteOffset, o.byteLength);
@@ -575,6 +637,9 @@ async function convert(file, format, maxWidth) {
     link.download = outName;
     link.innerHTML = DL_ICON + 'Download';
     li.append(link);
+
+    done.push({ name: outName, bytes: buf instanceof Uint8Array ? buf : new Uint8Array(buf) });
+    updateBulk();
   } catch (e) {
     li.classList.remove('busy');
     li.classList.add('failed');
@@ -587,6 +652,49 @@ async function convert(file, format, maxWidth) {
       : "Couldn't read this file. It may not be an image, or this browser can't open the format.";
   }
 }
+
+// Every finished output, kept so they can be zipped together
+const done = [];
+const bulk = document.getElementById('bulk');
+const dlAll = document.getElementById('dlAll');
+
+function updateBulk() {
+  bulk.hidden = done.length < 2;
+  dlAll.innerHTML = DL_ICON + 'Download all ' + done.length + ' files';
+}
+
+// Two sources can produce the same output name, so make each one unique before zipping
+function uniqueNames(entries) {
+  const seen = new Map();
+  return entries.map(e => {
+    const n = seen.get(e.name) || 0;
+    seen.set(e.name, n + 1);
+    if (!n) return e;
+    return { bytes: e.bytes, name: e.name.replace(/(\.[^.]+)$/, '-' + n + '$1') };
+  });
+}
+
+dlAll.addEventListener('click', () => {
+  if (done.length < 2) return;
+  dlAll.disabled = true;
+  const label = dlAll.innerHTML;
+  dlAll.innerHTML = DL_ICON + 'Zipping...';
+  // Let the button repaint before the zip blocks the main thread
+  setTimeout(() => {
+    try {
+      const blob = zipStore(uniqueNames(done));
+      const url = URL.createObjectURL(blob);
+      const a = el('a');
+      a.href = url;
+      a.download = 'picomp.zip';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } finally {
+      dlAll.innerHTML = label;
+      dlAll.disabled = false;
+    }
+  }, 30);
+});
 
 let queue = Promise.resolve();
 function addFiles(files) {

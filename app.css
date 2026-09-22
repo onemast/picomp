@@ -346,3 +346,10 @@ h1 {
   .thumb { width: 64px; height: 48px; }
   .dl { grid-column: 1 / -1; justify-content: center; }
 }
+
+/* Zip-everything bar, shown above the results once more than one file has finished */
+.bulk { display: flex; justify-content: center; margin: 28px 0 0; }
+.bulk[hidden] { display: none; }
+.bulk + .results { margin-top: 10px; }
+.dl-all { border: 0; cursor: pointer; font-family: inherit; }
+.dl-all:disabled { opacity: .6; cursor: default; }
