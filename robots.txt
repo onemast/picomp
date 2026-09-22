@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /README.md
+Disallow: /wrangler.jsonc
+Disallow: /.gitignore
 
 Sitemap: https://picomp.app/sitemap.xml

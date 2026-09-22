@@ -1,0 +1,24 @@
+# Picomp
+
+> A free image compressor and converter that runs entirely in the browser. Images are processed on the visitor's own device using WebAssembly codecs, and nothing is ever uploaded to a server.
+
+Picomp compresses and converts images without an account, an upload step, or a file size cap imposed by a server. Every codec runs locally, so the original file never leaves the device it was opened on.
+
+Quality is tuned per image rather than fixed at one setting. Each image is encoded, measured against the original, and re-encoded until it meets a quality target, so a photograph and a flat colour graphic are not treated the same way.
+
+## Formats
+
+- Writes JPG, PNG, WebP, AVIF and JXL.
+- Reads the common web formats plus HEIC, the format iPhones use by default, and JXL.
+
+## Options
+
+- Convert between formats, or compress in place while keeping the original format.
+- Resize by maximum width, up to 2000 pixels, set with a slider or an exact pixel value.
+- Keep or strip EXIF metadata. Metadata is stripped by default, which removes the GPS location a photo may carry.
+- Drop several images at once. Nothing downloads automatically, so each result is saved only when chosen.
+
+## Links
+
+- [Picomp](https://picomp.app/): the tool itself.
+- [Source code](https://github.com/onemast/picomp): the full source, which is plain HTML, CSS and JavaScript with no build step.
