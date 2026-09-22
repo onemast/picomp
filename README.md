@@ -22,7 +22,7 @@ Each encoder downloads only when a visitor first picks that format, so a plain J
 fetches the 3.5 MB AVIF encoder.
 
 Deployed on Cloudflare Pages, which serves WebAssembly with the right content type without any
-configuration. A `noindex` tag in the page keeps it out of search engines; remove it to be indexed.
+configuration. The tool is public and indexable.
 
 ## How settings are chosen
 
