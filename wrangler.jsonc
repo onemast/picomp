@@ -1,0 +1,9 @@
+// Cloudflare deploy config. Serves the repo root as static files and keeps the
+// workers.dev URL switched off so the site is only reachable at picomp.app
+{
+  "name": "picomp",
+  "compatibility_date": "2026-09-21",
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  "assets": { "directory": "." }
+}
