@@ -758,3 +758,15 @@ pick.addEventListener('change', () => { addFiles(pick.files); pick.value = ''; }
 ['dragenter', 'dragover'].forEach(t => window.addEventListener(t, e => { e.preventDefault(); table.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(t => window.addEventListener(t, e => { e.preventDefault(); table.classList.remove('over'); }));
 window.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+// About panel. Native dialogs already close on Esc and the close button;
+// this adds closing on a click on the dimmed backdrop outside the panel
+for (const [btnId, dlgId] of [['aboutBtn', 'aboutDlg']]) {
+  const dlg = document.getElementById(dlgId);
+  document.getElementById(btnId).addEventListener('click', () => dlg.showModal());
+  dlg.addEventListener('click', e => {
+    if (e.target !== dlg) return;
+    const r = dlg.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dlg.close();
+  });
+}

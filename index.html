@@ -19,11 +19,14 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
-<link rel="stylesheet" href="app.css?v=65">
+<link rel="stylesheet" href="app.css?v=66">
 </head>
 <body>
 <main>
-  <h1><a href="./" title="Start over">Picomp</a></h1>
+  <header class="top">
+    <h1><a href="./" title="Start over">Picomp</a></h1>
+    <button type="button" class="about-btn" id="aboutBtn" aria-label="About Picomp" title="About Picomp">?</button>
+  </header>
 
   <div class="controls">
     <div class="ctl formats" id="formats">
@@ -81,6 +84,26 @@
   </dl>
 </main>
 
+<footer class="ver">v1.0.2</footer>
+
+<dialog class="modal" id="aboutDlg" aria-labelledby="aboutTitle">
+  <form method="dialog"><button class="modal-x" aria-label="Close">&times;</button></form>
+  <h2 id="aboutTitle">About Picomp</h2>
+  <p class="lead">Picomp makes images smaller and converts them between formats, right in your browser.</p>
+  <h3>Private by design</h3>
+  <p>Your images never leave your device. Nothing is uploaded and there is no account. All the work happens on your own computer or phone, so it is just as safe for personal photos as for confidential files.</p>
+  <h3>How it works</h3>
+  <p>Picomp runs the same open-source encoders that professional tools rely on, including MozJPEG, libwebp, libaom and libjxl, compiled to run inside the browser. Each image is encoded, compared with the original and adjusted, so a photo and a flat graphic each get the settings that suit them instead of one fixed quality for everything.</p>
+  <h3>Why Picomp</h3>
+  <ul>
+    <li><b>Nothing to upload.</b> Big files start straight away, and private ones stay private.</li>
+    <li><b>Smaller files.</b> In side-by-side tests against popular online compressors, Picomp's JPG and WebP output came out smaller on most samples at comparable quality.</li>
+    <li><b>Modern formats.</b> Saves AVIF and JXL as well as JPG, PNG and WebP, and opens iPhone HEIC photos.</li>
+    <li><b>No catches.</b> No sign-up, no daily limits and no watermarks.</li>
+  </ul>
+</dialog>
+
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -95,6 +118,6 @@
 </script>
 <script src="vendor/pica.min.js"></script>
 <script src="vendor/codecs.js"></script>
-<script src="app.js?v=65"></script>
+<script src="app.js?v=66"></script>
 </body>
 </html>
