@@ -26,8 +26,12 @@ Each encoder downloads the first time a visitor picks that format, so a JPG conv
 Each format adapts its settings to the image.
 
 - **JPG** encodes both colour modes and keeps reduced colour only when it costs little, raises quality
-  for small images and for graphics, and steps quality up if a photo lands below a fidelity floor
-- **PNG** searches for the smallest palette that still clears a quality target
+  for small images, graphics and sources that were not already JPEG,
+  and steps quality up if a photo lands below a fidelity floor
+- **PNG** searches for the smallest palette that still clears a quality target, then gives small, strongly
+  coloured areas such as jewellery a second chance at palette colours
+- **WebP** raises quality for photos from sources that were not already JPEG, so fine texture such as
+  skin survives
 - **AVIF** is written at 10 bits with an explicit colour tag, which some decoders need to show it correctly
 - **JXL** scales images over 18 megapixels down to fit, because the encoder exhausts browser memory above that
 

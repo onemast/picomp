@@ -32,6 +32,15 @@ const JPG_SMALL_QUALITY = 80;
 const JPG_GRAPHIC_COLOURS = 4000;
 const JPG_GRAPHIC_QUALITY = 85;
 
+// A source that was not already a JPEG (PNG, WebP, HEIC and the like) carries real fine texture, such as
+// skin pores and freckles, which quality 65 smears into blotches. A JPEG source has lost that texture once
+// already, so its fine detail is mostly old compression noise and 65 stays right for it.
+const JPG_CLEAN_SOURCE_QUALITY = 80;
+
+// WebP has the same problem with photos from a clean source, and needs 85 to keep the texture JPG keeps at 80.
+// Graphics stay at the default: they have no fine texture to lose, and 70 was settled for them in testing.
+const WEBP_CLEAN_SOURCE_QUALITY = 85;
+
 // Lossy PNG: palette reduction with libimagequant, then OxiPNG. Dither stays on: without it
 // photos band visibly in flat areas, even though the numbers look better.
 // Palette size is searched between MIN and MAX for the smallest one whose PSNR against the source clears the target
@@ -40,6 +49,16 @@ const PNG_COLORS_MIN = 16;
 const PNG_COLORS_MAX = 256;
 const PNG_PSNR_TARGET = 48;
 const PNG_DITHER = 0.5;
+
+// A small area of strong colour, such as gold jewellery in a portrait, can lose every palette slot to the
+// skin and background around it and come back washed out. A second pass re-runs the palette with those
+// badly matched pixels counted extra, so they claim colours of their own.
+// ERROR is the OKLab distance past which a pixel counts as badly matched, just beyond a visible difference.
+// SHARE is the weight those pixels get in the second pass, as a fraction of the image.
+// The second pass is kept only when its PSNR stays within TOLERANCE dB of the first.
+const PNG_REWEIGHT_ERROR = 0.02;
+const PNG_REWEIGHT_SHARE = 0.04;
+const PNG_REWEIGHT_TOLERANCE = 0.1;
 
 const drop = document.getElementById('drop');
 const pick = document.getElementById('pick');
@@ -429,7 +448,59 @@ function psnr(a, b) {
   return n && sq ? 10 * Math.log10(255 * 255 / (sq / n)) : Infinity;
 }
 
-// Binary search the palette size (to within 4 colours) for the smallest one that still meets the PSNR target
+// sRGB to linear light, used by the perceptual colour check
+const SRGB_LINEAR = new Float32Array(256);
+for (let i = 0; i < 256; i++) {
+  const v = i / 255;
+  SRGB_LINEAR[i] = v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+
+// Convert one pixel to OKLab, a colour space where equal distances look equally different
+function toOklab(d, i, out) {
+  const r = SRGB_LINEAR[d[i]], g = SRGB_LINEAR[d[i + 1]], b = SRGB_LINEAR[d[i + 2]];
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  out[0] = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+  out[1] = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+  out[2] = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+}
+
+// Second palette pass: find pixels the first palette matched badly and quantise again with copies of them
+// in extra rows below the image, which weights the palette toward them. The extra rows are cut off again.
+// Returns null when every pixel already matches well.
+function reweightPalette(mod, pixels, ref, n, first) {
+  const w = pixels.width, h = pixels.height, src = pixels.data, size = w * h;
+  const out = premultiplied(first, w, h).data;
+  const A = new Float64Array(3), B = new Float64Array(3);
+  const limit = PNG_REWEIGHT_ERROR * PNG_REWEIGHT_ERROR;
+  const bad = new Uint8Array(size);
+  let count = 0;
+  for (let p = 0, i = 0; p < size; p++, i += 4) {
+    if (src[i + 3] === 0) continue;
+    toOklab(ref, i, A);
+    toOklab(out, i, B);
+    const dl = A[0] - B[0], da = A[1] - B[1], db = A[2] - B[2];
+    if (dl * dl + da * da + db * db > limit) { bad[p] = 1; count++; }
+  }
+  if (!count) return null;
+  const where = new Uint32Array(count);
+  for (let p = 0, k = 0; p < size; p++) if (bad[p]) where[k++] = p;
+
+  // Copies are spread evenly across every badly matched pixel, so no one part of the image dominates
+  const rows = Math.max(1, Math.ceil(h * PNG_REWEIGHT_SHARE));
+  const extra = rows * w;
+  const aug = new Uint8ClampedArray((size + extra) * 4);
+  aug.set(src);
+  for (let k = 0, o = size * 4; k < extra; k++, o += 4) {
+    const s = where[Math.floor(k * count / extra)] * 4;
+    aug[o] = src[s]; aug[o + 1] = src[s + 1]; aug[o + 2] = src[s + 2]; aug[o + 3] = src[s + 3];
+  }
+  return new Uint8ClampedArray(mod.quantize(aug, w, h + rows, n, PNG_DITHER).subarray(0, size * 4));
+}
+
+// Binary search the palette size (to within 4 colours) for the smallest one that still meets the PSNR target,
+// then give small, strongly coloured areas a second chance at palette slots
 async function quantizeAdaptive(pixels, onStep) {
   const mod = await loadQuantizer();
   const w = pixels.width, h = pixels.height;
@@ -444,6 +515,13 @@ async function quantizeAdaptive(pixels, onStep) {
     else lo = n;
   }
   if (!best) best = { data: run(PNG_COLORS_MAX), n: PNG_COLORS_MAX };
+
+  const second = reweightPalette(mod, pixels, ref.data, best.n, best.data);
+  if (second) {
+    const before = psnr(ref.data, premultiplied(best.data, w, h).data);
+    const after = psnr(ref.data, premultiplied(second, w, h).data);
+    if (after >= before - PNG_REWEIGHT_TOLERANCE) best.data = second;
+  }
   return { pixels: new ImageData(new Uint8ClampedArray(best.data), w, h), colors: best.n };
 }
 
@@ -480,12 +558,13 @@ function colourCount(pixels) {
   return seen.size;
 }
 
-async function encodeJpg(pixels, options, onStep) {
+async function encodeJpg(pixels, options, onStep, cleanSource) {
   const graphic = colourCount(pixels) < JPG_GRAPHIC_COLOURS;
   const small = !graphic && pixels.width * pixels.height <= JPG_SMALL_PIXELS;
   let base = options;
   if (graphic) base = { ...options, quality: JPG_GRAPHIC_QUALITY };
   else if (small) base = { ...options, quality: JPG_SMALL_QUALITY };
+  else if (cleanSource) base = { ...options, quality: JPG_CLEAN_SOURCE_QUALITY };
   const single = graphic || small;
   if (onStep) onStep(single ? 'encoding' : 'full colour');
   const full = await scoreJpg(pixels, { ...base, chroma_subsample: 1 });
@@ -571,7 +650,7 @@ async function convert(file, format, maxWidth) {
       buf = await PicompCodecs.png(r.pixels, f.options);
       detail = ', ' + r.colors + ' colours';
     } else if (format === 'jpg') {
-      const r = await encodeJpg(pixels, f.options, s => { meta.textContent = 'Encoding (' + s + ')...'; });
+      const r = await encodeJpg(pixels, f.options, s => { meta.textContent = 'Encoding (' + s + ')...'; }, sourceFormat(file) !== 'jpg');
       buf = r.buf;
       detail = ' ' + r.chroma + (r.quality !== FORMATS.jpg.options.quality ? ' q' + r.quality : '');
     } else if (format === 'avif') {
@@ -581,6 +660,11 @@ async function convert(file, format, maxWidth) {
       meta.textContent = 'Encoding JXL...';
       buf = await encodeJxl(pixels, f.options);
       if (shrunk) detail = ', shrunk to fit';
+    } else if (format === 'webp') {
+      const photo = sourceFormat(file) !== 'jpg' && colourCount(pixels) >= JPG_GRAPHIC_COLOURS;
+      const quality = photo ? WEBP_CLEAN_SOURCE_QUALITY : f.options.quality;
+      buf = await PicompCodecs.webp(pixels, { ...f.options, quality });
+      if (photo) detail = ' q' + quality;
     } else {
       buf = await PicompCodecs[format](pixels, f.options);
     }
