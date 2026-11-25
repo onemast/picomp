@@ -2,14 +2,14 @@
 
 **Live at [picomp.app](https://picomp.app)**
 
-Image compressor and converter that runs entirely in the browser. Nothing is uploaded: every image is
-decoded, resized and encoded on the visitor's own machine, so the server only ever serves static files.
+Image compressor and converter that runs entirely in the browser. Every image is decoded, resized and
+encoded on the visitor's own device, and the server only delivers the static files.
 
 ## What it does
 
 - Compresses and converts between **JPG, PNG, WebP, AVIF and JXL**
-- Reads **HEIC** and **JXL** as well, formats most browsers cannot open on their own
-- Optional resize to a chosen width, never upscaling
+- Reads **HEIC** and **JXL** as well
+- Optional resize to a chosen width
 - Optional **EXIF** copying, off by default so location data is not published by accident
 - Picks encoder settings per image rather than using one fixed quality
 
@@ -17,13 +17,13 @@ decoded, resized and encoded on the visitor's own machine, so the server only ev
 
 Copy the whole folder to a web server. There is no build step and no dependencies to install.
 
-It must be served over HTTP rather than opened from disk, because the encoders are loaded as modules.
-Each encoder downloads only when a visitor first picks that format, so a plain JPG conversion never
-fetches the 3.5 MB AVIF encoder.
+It must be served from a web server rather than opened from disk, because the encoders load as modules.
+Each encoder downloads the first time a visitor picks that format, so a JPG conversion skips the
+3.5 MB AVIF encoder.
 
 ## How settings are chosen
 
-Rather than one quality for everything, each format adapts:
+Each format adapts its settings to the image.
 
 - **JPG** encodes both colour modes and keeps reduced colour only when it costs little, raises quality
   for small images and for graphics, and steps quality up if a photo lands below a fidelity floor

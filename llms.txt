@@ -1,8 +1,8 @@
 # Picomp
 
-> A free image compressor and converter that runs entirely in the browser. Images are processed on the visitor's own device using WebAssembly codecs, and nothing is ever uploaded to a server.
+> A free image compressor and converter that runs entirely in the browser. Images are processed on the visitor's own device using WebAssembly codecs.
 
-Picomp compresses and converts images without an account, an upload step, or a file size cap imposed by a server. Every codec runs locally, so the original file never leaves the device it was opened on.
+Picomp compresses and converts images without an account, an upload step, or a file size cap imposed by a server. Every codec runs locally, so the original file stays on the device it was opened on.
 
 Quality is tuned per image rather than fixed at one setting. Each image is encoded, measured against the original, and re-encoded until it meets a quality target, so a photograph and a flat colour graphic are not treated the same way.
 
@@ -16,7 +16,7 @@ Quality is tuned per image rather than fixed at one setting. Each image is encod
 - Convert between formats, or compress in place while keeping the original format.
 - Resize by maximum width, up to 2000 pixels, set with a slider or an exact pixel value.
 - Keep or strip EXIF metadata. Metadata is stripped by default, which removes the GPS location a photo may carry.
-- Drop several images at once. Nothing downloads automatically, so each result is saved only when chosen.
+- Drop several images at once. Results download only when chosen.
 
 ## Links
 
