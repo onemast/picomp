@@ -1,0 +1,8 @@
+# Files Cloudflare must not publish. The site root is the repo root, so without this the build
+# uploads the git folder and repo housekeeping files alongside the site. Keep _headers off this list.
+.git
+.gitignore
+.assetsignore
+README.md
+wrangler.jsonc
+_tests
